@@ -1,67 +1,34 @@
-(() => {
-  const menuButton = document.querySelector('.menu-toggle');
-  const nav = document.querySelector('.main-nav');
-  menuButton.addEventListener('click', () => {
-    const open = nav.classList.toggle('open');
-    menuButton.setAttribute('aria-expanded', String(open));
-    menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
-  });
-
-  const searchToggle = document.querySelector('.search-toggle');
-  const searchPanel = document.querySelector('.search-panel');
-  const searchInput = document.querySelector('#site-search');
-  const closeSearch = document.querySelector('.search-close');
-  const products = [...document.querySelectorAll('.product-card')];
-  const noResults = document.querySelector('.no-results');
-  function setSearch(open) {
-    searchPanel.hidden = !open;
-    searchToggle.setAttribute('aria-expanded', String(open));
-    if (open) searchInput.focus();
-    else { searchInput.value = ''; filterProducts(''); }
-  }
-  searchToggle.addEventListener('click', () => setSearch(searchPanel.hidden));
-  closeSearch.addEventListener('click', () => setSearch(false));
-  function filterProducts(query) {
-    const term = query.trim().toLowerCase();
-    let visible = 0;
-    products.forEach(card => {
-      const match = !term || card.dataset.search.includes(term);
-      card.hidden = !match;
-      if (match) visible++;
-    });
-    noResults.hidden = visible !== 0;
-  }
-  searchInput.addEventListener('input', event => filterProducts(event.target.value));
-  document.addEventListener('keydown', event => { if (event.key === 'Escape') setSearch(false); });
-
-  let cartCount = 0;
-  const cartButton = document.querySelector('.cart-button');
-  const countLabel = document.querySelector('.cart-count');
-  const toast = document.querySelector('.toast');
-  let toastTimer;
-  document.querySelectorAll('.add-button').forEach(button => button.addEventListener('click', () => {
-    cartCount++;
-    countLabel.textContent = cartCount;
-    cartButton.setAttribute('aria-label', `Shopping bag, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`);
-    toast.textContent = `${button.dataset.product} added to your bag`;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
-  }));
-
-  const newsletter = document.querySelector('.newsletter-form');
-  const message = document.querySelector('.form-message');
-  newsletter.addEventListener('submit', event => {
-    event.preventDefault();
-    const email = newsletter.elements.email;
-    if (!email.validity.valid || !email.value.trim()) {
-      message.textContent = 'Please enter a valid email address.';
-      message.classList.add('error');
-      email.focus();
-      return;
-    }
-    message.textContent = 'You’re on the list. Look out for a little note from us.';
-    message.classList.remove('error');
-    newsletter.reset();
-  });
+(()=>{'use strict';
+const categories=[
+{name:'آرایش صورت',cols:[['آرایش صورت','کرم‌پودر','کانسیلر','پنکیک و پودر','رژگونه','هایلایتر','پرایمر'],['آرایش چشم','ریمل','خط چشم','سایه چشم','مداد چشم و ابرو','محصولات ابرو'],['آرایش لب','رژ لب','خط لب','بالم لب','برق لب']]},
+{name:'آرایش چشم',cols:[['چشم','ریمل','خط چشم','سایه چشم','مداد چشم و ابرو','محصولات ابرو'],['ابزار چشم','فرمژه','براش چشم','پالت سایه'],['پیشنهاد لوما','آرایش روزانه','آرایش شب']]},
+{name:'آرایش لب',cols:[['لب','رژ لب','خط لب','بالم لب','برق لب'],['بافت','مات','مخملی','براق'],['پیشنهاد لوما','رنگ‌های روزانه','مراقبت لب']]},
+{name:'مراقبت پوست',cols:[['پاکسازی','شوینده صورت','میسلار واتر','تونر','پاک‌کننده آرایش'],['آبرسانی','سرم صورت','کرم مرطوب‌کننده','ماسک صورت','ضدآفتاب'],['نیاز پوستی','پوست خشک','پوست چرب','پوست حساس','روتین روزانه']]},
+{name:'مراقبت مو',cols:[['شست‌وشو','شامپو','نرم‌کننده','ماسک مو'],['درمان مو','سرم مو','روغن مو','اسپری محافظ حرارت'],['نیاز مو','موهای خشک','موهای رنگ‌شده','مراقبت روزانه']]},
+{name:'عطر و بدن',cols:[['عطر','عطر زنانه','عطر مردانه','بادی‌اسپلش'],['مراقبت بدن','لوسیون بدن','کرم دست','اسکراب بدن'],['حمام','شامپو بدن','روغن بدن','ست هدیه']]}
+];
+const products=[];let id=0;const add=(name,cat,price,shape,tag='')=>products.push({id:++id,name,cat,price,shape,tag});
+[['کرم‌پودر ساتین','کرم‌پودر'],['کانسیلر روشن‌کننده','کانسیلر'],['پنکیک ابریشمی','پنکیک و پودر'],['رژگونه رزگلد','رژگونه'],['هایلایتر درخشان','هایلایتر'],['پرایمر مات‌کننده','پرایمر'],['ریمل حجم‌دهنده','ریمل'],['خط چشم ماژیکی','خط چشم'],['پالت سایه نود','سایه چشم'],['مداد چشم مخملی','مداد چشم و ابرو'],['ژل حالت‌دهنده ابرو','محصولات ابرو'],['رژ لب مخملی','رژ لب'],['مداد لب کلاسیک','خط لب'],['بالم لب مغذی','بالم لب'],['برق لب شفاف','برق لب']].forEach((x,i)=>add(x[0],x[1],[485000,390000,520000,430000,610000,465000,395000,310000,890000,275000,360000,440000,260000,245000,330000][i],i%5===2?'jar':i%5===3?'compact':i%5===4?'tube':'bottle',i===0?'پرفروش':''));
+[['شوینده لطیف صورت','شوینده صورت'],['سرم آبرسان هیالورونیک','سرم صورت'],['کرم روز محافظ','کرم مرطوب‌کننده'],['ضدآفتاب روزانه','ضدآفتاب'],['شامپو تقویتی','شامپو'],['ماسک نرم‌کننده مو','ماسک مو'],['سرم درخشان‌کننده مو','سرم مو'],['عطر اَمبر بلوم','عطر زنانه'],['بادی‌اسپلش بلوم','بادی‌اسپلش'],['لوسیون بدن ابریشمی','لوسیون بدن']].forEach((x,i)=>add(x[0],x[1],[395000,780000,640000,590000,425000,510000,480000,1250000,490000,550000][i],i%3===0?'jar':'bottle',i===1?'محبوب':''));
+const nav=document.querySelector('#nav'),mega=document.querySelector('#mega'),search=document.querySelector('#search'),prodRoot=document.querySelector('#products'),filters=document.querySelector('#filters'),empty=document.querySelector('#empty'),dlg=document.querySelector('#drawer'),dialogBody=document.querySelector('#dialogBody');let active=0,selected='همه محصولات',query='';
+const norm=s=>String(s).normalize('NFKD').replace(/[ً-ٰٟـ]/g,'').replace(/[ي]/g,'ی').replace(/[ك]/g,'ک').replace(/[‌\s]+/g,'').toLowerCase();
+function goCategory(cat){selected=cat||'همه محصولات';document.querySelector('#collectionTitle').textContent=selected==='همه محصولات'?'محصولات محبوب':selected;drawProducts();document.querySelector('#collection').scrollIntoView({behavior:'smooth'});closeMega()}
+function renderNav(){categories.forEach((c,i)=>{let b=document.createElement('button');b.type='button';b.innerHTML=`${c.name}<span class="chev" aria-hidden="true">⌄</span>`;b.setAttribute('aria-expanded',String(i===active));b.setAttribute('aria-controls','mega');b.addEventListener('click',()=>{if(innerWidth<=700){active=i; b.setAttribute('aria-expanded',String(!mega.hidden));if(mega.hidden)openMega(i);else closeMega();}else if(!mega.hidden&&active===i)closeMega();else openMega(i)});nav.append(b)});}
+function openMega(i){active=i;mega.replaceChildren();mega.hidden=false;nav.querySelectorAll('button').forEach((b,j)=>b.setAttribute('aria-expanded',String(j===i)));let promo=document.createElement('div');promo.className='mega-promo';promo.innerHTML='<div class="promo-label"><b>انتخاب‌های روزانه</b><a href="#collection" data-go="همه محصولات">مشاهده محصولات</a></div>';mega.append(promo);let cols=document.createElement('div');cols.className='mega-cols';categories[i].cols.forEach(col=>{let box=document.createElement('section');box.className='mega-col';let h=document.createElement('h3');h.textContent=col[0];box.append(h);col.slice(1).forEach(label=>{let a=document.createElement('a');a.href='#collection';a.textContent=label;a.dataset.go=label;box.append(a)});cols.append(box)});mega.append(cols);mega.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();goCategory(a.dataset.go)}));}
+function closeMega(){mega.hidden=true;nav.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-expanded',String(i===active)))}
+function productNode(p){let art=document.createElement('article');art.className='product';let visual=document.createElement('div');visual.className='product-visual';let pack=document.createElement('div');pack.className=`pack ${p.shape}`;let brand=document.createElement('b');brand.textContent='LUMA';let label=document.createElement('small');label.textContent=p.name;pack.append(brand,label);visual.append(pack);if(p.tag){let t=document.createElement('span');t.className='tag';t.textContent=p.tag;visual.append(t)}let meta=document.createElement('div');meta.className='product-meta';let info=document.createElement('div'),h=document.createElement('h3'),desc=document.createElement('p');h.textContent=p.name;desc.textContent=p.cat;info.append(h,desc);let price=document.createElement('strong');price.className='price';price.textContent=new Intl.NumberFormat('fa-IR').format(p.price)+' تومان';meta.append(info,price);let button=document.createElement('button');button.className='add';button.type='button';button.textContent='افزودن به سبد +';button.addEventListener('click',()=>changeCart(p.id,1));art.append(visual,meta,button);return art}
+function drawFilters(){filters.replaceChildren();['همه محصولات',...new Set(products.map(p=>p.cat))].forEach(cat=>{let b=document.createElement('button');b.type='button';b.textContent=cat;b.classList.toggle('active',cat===selected);b.addEventListener('click',()=>{selected=cat;drawProducts()});filters.append(b)})}
+function drawProducts(){drawFilters();prodRoot.replaceChildren();let shown=products.filter(p=>(selected==='همه محصولات'||p.cat===selected)&&(!query||norm(p.name+' '+p.cat).includes(norm(query))));shown.forEach(p=>prodRoot.append(productNode(p)));empty.hidden=shown.length>0}
+let cart={};try{const saved=JSON.parse(localStorage.getItem('luma-demo-cart')||'{}');if(saved&&typeof saved==='object')cart=saved}catch{}function persist(){try{localStorage.setItem('luma-demo-cart',JSON.stringify(cart))}catch{}}
+function count(){return Object.values(cart).reduce((a,n)=>a+(Number(n)||0),0)}function badge(){document.querySelector('#cartBadge').textContent=new Intl.NumberFormat('fa-IR').format(count());document.querySelector('#cartOpen').setAttribute('aria-label',`مشاهده سبد خرید، ${count()} محصول`)}
+function changeCart(pid,delta){cart[pid]=Math.max(0,(Number(cart[pid])||0)+delta);if(!cart[pid])delete cart[pid];persist();badge();toast(products.find(p=>p.id===pid).name+(delta>0?' به سبد افزوده شد':' به‌روزرسانی شد'));if(dlg.open&&dlg.dataset.view==='cart')showCart()}
+function showCart(){dlg.dataset.view='cart';dialogBody.replaceChildren();let h=document.createElement('h2');h.textContent='سبد خرید';dialogBody.append(h);let entries=Object.entries(cart);if(!entries.length){let p=document.createElement('p');p.textContent='سبد خرید خالی است.';dialogBody.append(p)}let total=0;entries.forEach(([pid,n])=>{let p=products.find(x=>x.id===Number(pid));if(!p)return;total+=p.price*n;let row=document.createElement('div');row.className='cart-row';let title=document.createElement('span');title.textContent=p.name;let qty=document.createElement('div');qty.className='qty';let minus=document.createElement('button');minus.textContent='−';minus.setAttribute('aria-label','کم‌کردن تعداد');minus.onclick=()=>changeCart(p.id,-1);let amount=document.createElement('span');amount.textContent=new Intl.NumberFormat('fa-IR').format(n);let plus=document.createElement('button');plus.textContent='+';plus.setAttribute('aria-label','افزودن تعداد');plus.onclick=()=>changeCart(p.id,1);qty.append(minus,amount,plus);let remove=document.createElement('button');remove.textContent='حذف';remove.onclick=()=>{cart[p.id]=0;delete cart[p.id];persist();badge();showCart()};row.append(title,qty,remove);dialogBody.append(row)});let sum=document.createElement('p');sum.innerHTML='';sum.textContent='جمع نمایشی: '+new Intl.NumberFormat('fa-IR').format(total)+' تومان';dialogBody.append(sum);let note=document.createElement('p');note.textContent='این فروشگاه نمایشی است؛ ثبت سفارش یا پرداخت انجام نمی‌شود.';dialogBody.append(note)}
+function showAccount(){dlg.dataset.view='account';dialogBody.replaceChildren();let h=document.createElement('h2');h.textContent='حساب کاربری';let p=document.createElement('p');p.textContent='این نسخه نمایشی به حساب واقعی متصل نیست و اطلاعات شخصی دریافت نمی‌کند.';let btn=document.createElement('button');btn.className='add';btn.textContent='بازگشت به فروشگاه';btn.onclick=()=>dlg.close();dialogBody.append(h,p,btn)}
+let timer;function toast(s){let el=document.querySelector('#toast');el.textContent=s;el.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>el.classList.remove('show'),2200)}
+renderNav();drawProducts();badge();openMega(0);
+search.addEventListener('input',()=>{query=search.value;selected='همه محصولات';drawProducts();document.querySelector('#collectionTitle').textContent=query?'نتایج جست‌وجو':'محصولات محبوب'});document.querySelector('#searchForm').addEventListener('submit',e=>{e.preventDefault();document.querySelector('#collection').scrollIntoView({behavior:'smooth'})});document.querySelector('#clearSearch').addEventListener('click',()=>{search.value='';query='';drawProducts();document.querySelector('#collectionTitle').textContent='محصولات محبوب';search.focus()});
+document.querySelector('#cartOpen').onclick=()=>{showCart();dlg.showModal()};document.querySelector('#accountOpen').onclick=()=>{showAccount();dlg.showModal()};document.querySelector('#footerAccount').onclick=e=>{e.preventDefault();showAccount();dlg.showModal()};dlg.querySelector('.x').onclick=()=>dlg.close();dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+document.querySelector('#mobileToggle').addEventListener('click',()=>{let open=nav.classList.toggle('open');document.querySelector('#mobileToggle').setAttribute('aria-expanded',String(open));if(open)closeMega()});document.addEventListener('click',e=>{if(!mega.hidden&&!mega.contains(e.target)&&!nav.contains(e.target)&&!e.target.closest('.header'))closeMega()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMega();nav.classList.remove('open');document.querySelector('#mobileToggle').setAttribute('aria-expanded','false')}if(e.key==='Tab'&&document.activeElement.closest('.header')&&!e.shiftKey)closeMega()});
+const slides=[{title:'زیبایی، ساده و روزمره',eyebrow:'LUMA BEAUTY',image:'assets/campaign.webp'},{title:'لحظه‌ای برای خودت',eyebrow:'انتخاب‌های روزانه',image:'assets/beauty.webp'},{title:'رنگی از حال خوب',eyebrow:'کشف مجموعه لوما',image:'assets/promo.webp'}];let slide=0;const heroImg=document.querySelector('#heroImg');heroImg.addEventListener('error',()=>{heroImg.src='assets/beauty.webp'},{once:true});function setSlide(n){slide=(n+slides.length)%slides.length;let s=slides[slide];document.querySelector('#heroTitle').textContent=s.title;document.querySelector('#heroEyebrow').textContent=s.eyebrow;heroImg.src=s.image;document.querySelector('#slideNum').textContent=new Intl.NumberFormat('fa-IR',{minimumIntegerDigits:2}).format(slide+1)+' / ۰۳';document.querySelectorAll('.dot').forEach((d,i)=>{d.classList.toggle('active',i===slide);d.setAttribute('aria-pressed',String(i===slide))})}let dots=document.querySelector('#dots');slides.forEach((_,i)=>{let b=document.createElement('button');b.className='dot';b.setAttribute('aria-label',`نمایش اسلاید ${i+1}`);b.onclick=()=>setSlide(i);dots.append(b)});document.querySelector('#prev').onclick=()=>setSlide(slide-1);document.querySelector('#next').onclick=()=>setSlide(slide+1);setSlide(0);
+const cards=document.querySelector('#categoryCards');[['آرایش صورت','compact'],['آرایش چشم','bottle'],['آرایش لب','tube'],['مراقبت پوست','jar'],['مراقبت مو','pump'],['عطر و بدن','bottle']].forEach(([name,shape])=>{let a=document.createElement('a');a.className='cat-card';a.href='#collection';let art=document.createElement('span');art.className='cat-art';let pack=document.createElement('i');pack.className='pack '+shape;pack.innerHTML='<b>LUMA</b>';art.append(pack);let b=document.createElement('b');b.textContent=name;a.append(art,b);a.onclick=e=>{e.preventDefault();goCategory(name)};cards.append(a)});
 })();
